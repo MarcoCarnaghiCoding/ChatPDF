@@ -36,7 +36,38 @@ def get_pdf_text(pdf_docs):
 
     return text
 
+# Function to get YouTube video subtitles
+def get_video_subtitles(video_id):
+    """
+    Gets the subtitles for a YouTube video using the YouTubeTranscriptApi.
+
+    Args:
+        video_id: The unique ID of the YouTube video.
+
+    Returns:
+        A string of the video subtitles.
+    """
+
+    # Get the video transcript
+    subtitles = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(video_id)
+
+    # Concatenate the subtitles into a single string
+    subtitle_text = " ".join([x['text'] for x in subtitles])
+
+    return subtitle_text
+
+
 def get_text_chunks(raw_text, chunk_size=1000):
+    """
+    Splits raw text into smaller chunks for processing.
+
+    Args:
+        raw_text: The raw text string.
+        chunk_size: The desired size of each text chunk.
+
+    Returns:
+        A list of text chunks.
+    """
     #initialize splitter
     text_splitter = CharacterTextSplitter(
         separator="\n",
@@ -48,12 +79,30 @@ def get_text_chunks(raw_text, chunk_size=1000):
     return chunks
 
 def get_vector_store(chunks):
+    """
+    Creates a vector store from a list of text chunks.
+
+    Args:
+        chunks: A list of text chunks.
+
+    Returns:
+        A FAISS vector store.
+    """
     embeddings = HuggingFaceInstructEmbeddings(model_name = 'hkunlp/instructor-large')   
     vector_store = FAISS.from_texts(chunks,
                                     embeddings = embeddings)
     return vector_store
 
 def get_conversation_chain(vector_store):
+    """
+    Creates a conversational retrieval chain.
+
+    Args:
+        vector_store: A FAISS vector store.
+
+    Returns:
+        A ConversationalRetrievalChain object.
+    """
     llm = HuggingFaceHub(
         repo_id = "google/flan-t5-xxl",
         model_kwargs = {
@@ -73,6 +122,15 @@ def get_conversation_chain(vector_store):
 
 
 def handle_userinput(user_question):
+    """
+    Processes user input and generates a response.
+
+    Args:
+        user_question: The user's question.
+
+    Returns:
+        None.
+    """
     response = st.session_state.conversation({'question':user_question})
     st.session_state.chat_history = response['chat_history']
 
