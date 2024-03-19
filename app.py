@@ -148,7 +148,7 @@ def main():
 
     #set page configuration
     st.set_page_config(
-        page_title="Chat with multiple PDFs",
+        page_title="Chat with multiple information sources",
         page_icon=":books:",
     )
 
@@ -160,7 +160,7 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    st.header("Chat with multiple PDFs :books:")      
+    st.header("Chat with multiple PDFs and YouTube Videos :books:")      
     user_question = st.text_input("Ask a question about your PDFs:")
     
     #Salutation
