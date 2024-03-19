@@ -1,17 +1,30 @@
+# For the streamlit app
 import streamlit as st 
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+# For the Large Language Model
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.llms import HuggingFaceHub
+# To handle Youtube transcripts
+import youtube_transcript_api
 
-
+# Custom templates
 from htmlTemplates import css, bot_template, user_template
 
 def get_pdf_text(pdf_docs):
+    """
+    Reads and extracts text from a list of PDF documents.
+
+    Args:
+        pdf_docs: A list of PDF file objects.
+
+    Returns:
+        A string containing the extracted text from all PDF documents.
+    """
     text = ""
 
     for pdf_doc in pdf_docs:
