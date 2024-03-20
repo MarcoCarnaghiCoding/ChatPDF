@@ -173,15 +173,25 @@ def main():
 
     with st.sidebar:
         st.subheader("Your Documents")
-        pdf_docs = st.file_uploader("Upload your PDFs",
-                                    accept_multiple_files=True)
-        
+        source_type = st.selectbox("Choose the source type:",
+                               options=["PDF", "YouTube"])
+
+        if source_type == "PDF":
+            pdf_docs = st.file_uploader("Upload your PDFs",
+                                        accept_multiple_files=True)
+        elif source_type == "YouTube":
+            youtube_link = st.text_input("Enter YouTube video link:")
+       
         if st.button('Process'):
             # generate spinner
             with st.spinner("Processing your PDFs ..."):
-                #1. get pdf raw text
-                raw_text = get_pdf_text(pdf_docs)
-                #st.write(raw_text) #debugging    
+                # 1. Get raw text
+                if source_type == "PDF":
+                        # Get PDF raw text
+                        raw_text = get_pdf_text(pdf_docs)
+                elif source_type == "YouTube":
+                        # Get YouTube video subtitles
+                        raw_text = get_video_subtitles(youtube_link) 
                 
                 #2. get pdf chuncks
                 text_chunks = get_text_chunks(raw_text,

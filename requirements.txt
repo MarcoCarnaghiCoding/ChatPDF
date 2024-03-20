@@ -6,4 +6,5 @@ faiss-cpu
 huggingface_hub
 sentence_transformers
 InstructorEmbedding
+youtube_transcript_api
 #-e .
