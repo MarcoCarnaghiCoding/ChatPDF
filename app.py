@@ -37,17 +37,17 @@ def get_pdf_text(pdf_docs):
     return text
 
 # Function to get YouTube video subtitles
-def get_video_subtitles(video_id):
+def get_video_subtitles(video_link):
     """
     Gets the subtitles for a YouTube video using the YouTubeTranscriptApi.
 
     Args:
-        video_id: The unique ID of the YouTube video.
+        video_link: The link to the YouTube video.
 
     Returns:
         A string of the video subtitles.
     """
-
+    video_id = video_link.split("=")[-1]
     # Get the video transcript
     subtitles = youtube_transcript_api.YouTubeTranscriptApi.get_transcript(video_id)
 
@@ -89,8 +89,7 @@ def get_vector_store(chunks):
         A FAISS vector store.
     """
     embeddings = HuggingFaceInstructEmbeddings(model_name = 'hkunlp/instructor-large')   
-    vector_store = FAISS.from_texts(chunks,
-                                    embeddings = embeddings)
+    vector_store = FAISS.from_texts(chunks, embedding = embeddings)
     return vector_store
 
 def get_conversation_chain(vector_store):
@@ -112,7 +111,7 @@ def get_conversation_chain(vector_store):
     )
     memory = ConversationBufferMemory(memory_key="chat_history",
                                       return_message= True)
-    conversation_chain = ConversartionalRetrievalChain.from_llm(
+    conversation_chain = ConversationalRetrievalChain.from_llm(
         llm = llm,
         retriever = vector_store.as_retriever(),
         memory = memory
@@ -173,18 +172,20 @@ def main():
 
     with st.sidebar:
         st.subheader("Your Documents")
+        # Get the source type selected by the user
         source_type = st.selectbox("Choose the source type:",
                                options=["PDF", "YouTube"])
-
+        # If PDF is selected, allow PDF file uploads
         if source_type == "PDF":
             pdf_docs = st.file_uploader("Upload your PDFs",
                                         accept_multiple_files=True)
+        # If YouTube is selected, get the YouTube video link
         elif source_type == "YouTube":
             youtube_link = st.text_input("Enter YouTube video link:")
        
         if st.button('Process'):
             # generate spinner
-            with st.spinner("Processing your PDFs ..."):
+            with st.spinner("Processing your data ..."):
                 # 1. Get raw text
                 if source_type == "PDF":
                         # Get PDF raw text
@@ -192,6 +193,7 @@ def main():
                 elif source_type == "YouTube":
                         # Get YouTube video subtitles
                         raw_text = get_video_subtitles(youtube_link) 
+                        raw_text = raw_text.replace("\n", " ").replace("[Music]", "")
                 
                 #2. get pdf chuncks
                 text_chunks = get_text_chunks(raw_text,
