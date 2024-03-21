@@ -119,6 +119,26 @@ def get_conversation_chain(vector_store):
 
     return conversation_chain
 
+def convert_chat_history(response,chat_history):
+    # Split the chat history string into individual messages
+    message = {}
+    message['question'] = response['question']
+    message['answer'] = response['answer']
+    print(message)
+    # Create a list of dictionaries to represent the chat history
+    chat_history = []
+
+    chat_history.append({
+            "role": "user",
+            "content": message['question'].strip()
+        })
+
+    chat_history.append({
+            "role": "bot",
+            "content": message['answer'].strip()
+        })
+
+    return chat_history
 
 def handle_userinput(user_question):
     """
@@ -131,13 +151,23 @@ def handle_userinput(user_question):
         None.
     """
     response = st.session_state.conversation({'question':user_question})
-    st.session_state.chat_history = response['chat_history']
 
+    # Convert the chat history string to the required format
+    print(response)
+    chat_history = convert_chat_history(response, st.session_state.chat_history)
+
+    # Assign the converted chat history
+    st.session_state.chat_history = chat_history
+
+    # Print the chat history
+    print('/n/n/n')
+    print(st.session_state.chat_history)
+    print('/n/n/n')
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
-            st.write(user_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+            st.write(user_template.replace("{{MSG}}",message.question),unsafe_allow_html=True)
         else:
-            st.write(bot_template.replace("{{MSG}}",message.content),unsafe_allow_html=True)
+            st.write(bot_template.replace("{{MSG}}",message.answer),unsafe_allow_html=True)
     
     return
 
@@ -157,7 +187,7 @@ def main():
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
-        st.session_state.chat_history = None
+        st.session_state.chat_history = []
 
     st.header("Chat with multiple PDFs and YouTube Videos :books:")      
     user_question = st.text_input("Ask a question about your PDFs:")
