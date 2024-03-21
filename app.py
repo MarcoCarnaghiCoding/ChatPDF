@@ -164,13 +164,22 @@ def handle_userinput(user_question):
     print(st.session_state.chat_history)
     print('/n/n/n')
     for i, message in enumerate(st.session_state.chat_history):
+        # Check if the message is from the user or the bot
+        if message['role'] == 'user':
+            # Display the user's question
+            st.write(user_template.replace("{{MSG}}", message['content']), unsafe_allow_html=True)
+        else:
+            # Display the bot's response
+            st.write(bot_template.replace("{{MSG}}", message['content']), unsafe_allow_html=True)
+    """
+    for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
             st.write(user_template.replace("{{MSG}}",message.question),unsafe_allow_html=True)
         else:
             st.write(bot_template.replace("{{MSG}}",message.answer),unsafe_allow_html=True)
-    
+    """
     return
-
+    
 def main():
     # Load environment variables
     load_dotenv()
