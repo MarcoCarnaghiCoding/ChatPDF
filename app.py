@@ -109,37 +109,34 @@ def get_conversation_chain(vector_store):
             "max_length": 256
         }
     )
-    memory = ConversationBufferMemory(memory_key="chat_history",
-                                      return_message= True)
+    memory = ConversationBufferMemory(  memory_key="chat_history",
+                                        return_messages=True,
+                                        output_key='answer')
     conversation_chain = ConversationalRetrievalChain.from_llm(
         llm = llm,
         retriever = vector_store.as_retriever(),
-        memory = memory
+        memory = memory,
+        output_key='answer',
     )
 
     return conversation_chain
 
-def convert_chat_history(response,chat_history):
-    # Split the chat history string into individual messages
-    message = {}
-    message['question'] = response['question']
-    message['answer'] = response['answer']
-    print(message)
-    # Create a list of dictionaries to represent the chat history
-    chat_history = []
+def convert_chat_history(response, chat_history):
+    # Create a new message tuple
+    message = (
+        response['question'].strip(),  # User's question
+        response['answer'].strip(),  # AI's response
+    )
 
-    chat_history.append({
-            "role": "user",
-            "content": message['question'].strip()
-        })
-
-    chat_history.append({
-            "role": "bot",
-            "content": message['answer'].strip()
-        })
+    # Append the message tuple to the chat history
+    chat_history.append(message)
 
     return chat_history
 
+
+def querying(query : str, conv_chain: object, chat_history):
+    result = conv_chain({"question": query, "chat_history": chat_history})
+    return result["answer"].strip()
 def handle_userinput(user_question):
     """
     Processes user input and generates a response.
@@ -150,34 +147,19 @@ def handle_userinput(user_question):
     Returns:
         None.
     """
-    response = st.session_state.conversation({'question':user_question})
 
-    # Convert the chat history string to the required format
-    print(response)
-    chat_history = convert_chat_history(response, st.session_state.chat_history)
-
-    # Assign the converted chat history
-    st.session_state.chat_history = chat_history
-
-    # Print the chat history
-    print('/n/n/n')
-    print(st.session_state.chat_history)
-    print('/n/n/n')
+    response = querying(query = user_question,
+                        conv_chain = st.session_state.conversation,
+                        chat_history = st.session_state.chat_history)
+    
+    
+    st.session_state.chat_history.append((user_question, response))
+    
     for i, message in enumerate(st.session_state.chat_history):
-        # Check if the message is from the user or the bot
-        if message['role'] == 'user':
-            # Display the user's question
-            st.write(user_template.replace("{{MSG}}", message['content']), unsafe_allow_html=True)
-        else:
-            # Display the bot's response
-            st.write(bot_template.replace("{{MSG}}", message['content']), unsafe_allow_html=True)
-    """
-    for i, message in enumerate(st.session_state.chat_history):
-        if i % 2 == 0:
-            st.write(user_template.replace("{{MSG}}",message.question),unsafe_allow_html=True)
-        else:
-            st.write(bot_template.replace("{{MSG}}",message.answer),unsafe_allow_html=True)
-    """
+        st.write(user_template.replace("{{MSG}}", message[0]), unsafe_allow_html=True)
+        # Display the bot's response
+        st.write(bot_template.replace("{{MSG}}", message[1]), unsafe_allow_html=True)
+    
     return
     
 def main():
